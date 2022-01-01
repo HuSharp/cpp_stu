@@ -348,54 +348,41 @@ IMPLEMENT_POOL_ALLOC(GOO)
 
 ## GNU 中的设计
 
-设计了十六条链表，每一条负责某一个特定大小的区块，第 0 条负责 8(1×8) 个字节的大小，，第15条负责的每一个区块是128（16×8）字节。
+* <defalloc.h>----SGI 标准的空间配置器，std::allocator (目前已经弃用)
+
+  allocator 只是基层内存配置/释放行为(::operator::new 和 ::operator::delete)的一层薄薄的包装，并没有考虑到任何效率上的强化。
+
+* SGI 特殊的空间配置器，std::alloc
+
+  SGI STL 的每一个容器都已经指定其缺省的空间配置器为 alloc。
+
+
+
+考虑到小型区块可能造成内存碎片问题，SGI 采用两级配置器，第一级配置器直接使用 malloc() 和 free() 实现；第二级配置器使用 memory pool 内存池管理。
+
+第二级配置器的原理：
+
+* 当配置区块超过 128 bytes，就使用第一级配置器
+* 当配置区块小于 128 bytes，使用内存池管理
+
+![image-20220101095749821](../assets/blog_image/README/image-20220101095749821.png)
+
+ 我们会发现, 也采用上面提到的 union 进行空间的减小.
+
+```cpp
+enum {_ALIGN = 8};  // 小型区块的上调边界
+enum {_MAX_BYTES = 128}; // 小区区块的上限
+enum {_NFREELISTS = 16}; // _MAX_BYTES/_ALIGN  free-list 的个数
+
+// free-list 的节点结构，降低维护链表 list 带来的额外负担
+union _Obj {
+    union _Obj* _M_free_list_link;  // 利用联合体特点
+    char _M_client_data[1];    /* The client sees this. */
+};
+static _Obj* __STL_VOLATILE _S_free_list[_NFREELISTS];  // 注意，它是数组，每个数组元素包含若干相等的小额区块
+```
+
+可发现设计了 16 条链表，每一条负责某一个特定大小的区块，第 0 条负责 8(1×8) 个字节的大小，，第15条负责的每一个区块是128（16×8）字节。
 所有的容器要分配内存时，都会找 alloc 要内存，容器元素的大小会被调整为8的倍数，如果 alloc 没有，才会调用 malloc. 每个链表头尾指针带 cookie。
 
 ![image-20211231231752645](../assets/blog_image/README/image-20211231231752645.png)
-
-
-
-
-
- 
-
-**allocate的实现**
-
-```cpp
-  /* __n must be > 0      */
-  // 申请大小为n的数据块，返回该数据块的起始地址 
-  static void* allocate(size_t __n)
-  {
-    void* __ret = 0;
-
-    // 如果需求区块大于 128 bytes，就转调用第一级配置
-    if (__n > (size_t) _MAX_BYTES) {
-      __ret = malloc_alloc::allocate(__n);
-    }
-    else {
-      // 根据申请空间的大小寻找相应的空闲链表（16个空闲链表中的一个）
-      _Obj* __STL_VOLATILE* __my_free_list
-          = _S_free_list + _S_freelist_index(__n);
-      // Acquire the lock here with a constructor call.
-      // This ensures that it is released in exit or during stack
-      // unwinding.
-#     ifndef _NOTHREADS
-      /*REFERENCED*/
-      _Lock __lock_instance;
-#     endif
-      _Obj* __RESTRICT __result = *__my_free_list;
-      // 空闲链表没有可用数据块，就将区块大小先调整至 8 倍数边界，然后调用 _S_refill() 重新填充
-      if (__result == 0)
-        __ret = _S_refill(_S_round_up(__n));
-      else {
-        // 如果空闲链表中有空闲数据块，则取出一个，并把空闲链表的指针指向下一个数据块  
-        *__my_free_list = __result -> _M_free_list_link;
-        __ret = __result;
-      }
-    }
-
-    return __ret;
-  };
-
-```
-
