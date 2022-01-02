@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2021-12-19 18:48:09
  * @LastEditors: HuSharp
- * @LastEditTime: 2021-12-29 19:49:20
+ * @LastEditTime: 2022-01-02 12:58:33
  * @@Email: 8211180515@csu.edu.cn
  */
 #include <stdlib.h>
@@ -18,6 +18,7 @@ using namespace std;
 namespace test_array
 {
     void test_array() {
+
         cout << "\ntest_array()---------------------\n";
         array<long, ASIZE> c;   // 第二个参数必须写 定义长度
 
