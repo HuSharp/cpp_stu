@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2021-12-19 21:49:50
  * @LastEditors: HuSharp
- * @LastEditTime: 2021-12-19 22:25:17
+ * @LastEditTime: 2022-01-02 22:06:17
  * @@Email: 8211180515@csu.edu.cn
  */
 #include <stdlib.h>
@@ -84,6 +84,7 @@ namespace test_forward_list
 
 
 #include <deque>
+#include<stack>
 namespace test_deque
 {
     void test_queue() {
@@ -93,6 +94,9 @@ namespace test_deque
         cout << "list.size()= " << c.max_size() << endl;	
 
         sort(c.begin(), c.end());
+
+        stack<int, list<int>> c2;
+        c2.push(3);
 
         
     }    

@@ -751,7 +751,7 @@ public:                         // push_* and pop_*
 public:                         // Insert
   // insert(pos, x)
   iterator insert(iterator position, const value_type& __x) {
-    if (position._M_cur == _M_start._M_cur) {
+    if (position._M_cur == _M_start._M_cur) {// 如果插入的是 deque 的最前端
       push_front(__x);
       return _M_start;
     }
