@@ -136,7 +136,7 @@ typename iterator_traits<I>::difference_type cout(I first, I last, const T& valu
 
 
 
-### iterator_category
+### 迭代器相应类型之：iterator_category
 
 ```cpp
 // iterator_category 五种迭代器类型
@@ -148,3 +148,91 @@ struct bidirectional_iterator_tag : public forward_iterator_tag {};
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 ```
 
+![image-20220108164230772](../assets/blog_image/README/image-20220108164230772.png)
+
++ 输入迭代器 (InputIterator) 是能从所指向元素读取的迭代器 (Iterator) 。输入迭代器 (InputIterator) 仅保证单趟算法的合法性。
++ 输出迭代器 (OutputIterator) 是能写入所指元素的迭代器 (Iterator) 。
++ 向前迭代器 (ForwardIterator) 是一种能从所指向元素读取数据的迭代器 (Iterator) 。
++ 双向迭代器 (BidirectionalIterator) 是能双向移动（即自增与自减）的向前迭代器 (ForwardIterator) 。
++ 随机访问迭代器 (RandomAccessIterator) 是能在常数时间内移动到指向任何元素的双向迭代器 (BidirectionalIterator) 。
+
+
+
+#### 查看 STL 内部名字
+
+可以通过` typeid(itr).name() `打印出 `stl`存储的 name。
+
+```cpp
+#include <typeinfo> // typeid
+template <typename I>
+void display_category(I itr)
+{
+    // typename iterator_traits<I>::iterator_category cagy;
+    typename iterator_traits<I>::iterator_category cagy;
+
+    cout << "typeid(itr).name()= " << typeid(itr).name() << endl
+         << endl;
+    //The output depends on library implementation.
+    //The particular representation pointed by the
+    //returned valueis implementation-defined,
+    //and may or may not be different for different types.
+}
+
+void test_iterator_category()
+{
+    cout << "\ntest_iterator_category().......... \n";
+
+    display_category(array<int, 10>::iterator());
+    display_category(vector<int>::iterator());
+    display_category(list<int>::iterator());
+}
+```
+
+`output`如下
+
+```shell
+typeid(itr).name()= Pi
+typeid(itr).name()= N9__gnu_cxx17__normal_iteratorIPiSt6vectorIiSaIiEEEE
+typeid(itr).name()= St14_List_iteratorIiE
+```
+
+
+
+拿 `advance`举例。
+
+```cpp
+template <class _InputIterator, class _Distance>
+inline void advance(_InputIterator& __i, _Distance __n) {
+  __advance(__i, __n, Iterator_traits<_InputIterator>::iterator_category());
+}
+```
+
+> 还需要注意的是：此处命名为`template <class _InputIterator`， 为什么是 `InputIterator`呢？而不是叫 T ？因为规定迭代器类型以最低阶命名。
+
+最后一个参数用于声明型别，通过萃取机询问获取 `iterator_category`，（`::iterator_category()`表示产生一个暂时对象。然后编译器根据这个获取的型别，选择调用下面的哪个重载函数。
+
+```cpp
+template <class _InputIter, class _Distance>
+inline void __advance(_InputIter& __i, _Distance __n, input_iterator_tag) {
+  while (__n--) ++__i;  // 单向，加上标记 input_iterator_tag 
+}
+
+template <class _RandomAccessIterator, class _Distance>
+inline void __advance(_RandomAccessIterator& __i, _Distance __n, 
+                      random_access_iterator_tag) {
+  __STL_REQUIRES(_RandomAccessIterator, _RandomAccessIterator);
+  __i += __n;  // 双向，跳跃前进，加上标记 random_access_iterator_tag
+}
+
+template <class _BidirectionalIterator, class _Distance>
+inline void __advance(_BidirectionalIterator& __i, _Distance __n, 
+                      bidirectional_iterator_tag) {
+  __STL_REQUIRES(_BidirectionalIterator, _BidirectionalIterator);
+  if (__n >= 0)    // 双向，加上标记 bidirectional_iterator_tag
+    while (__n--) ++__i;
+  else
+    while (__n++) --__i;
+}
+```
+
+一言概之的话就是，设计适当的相应型别，是迭代器的责任。设计适当的迭代器，是容器的责任。因为只有容器本身才知道应该设计出什么样的迭代器来操作自己，且执行迭代器该有的功能。
