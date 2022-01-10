@@ -4,12 +4,13 @@
  * @Author: HuSharp
  * @Date: 2022-01-09 14:05:39
  * @LastEditors: HuSharp
- * @LastEditTime: 2022-01-09 22:01:08
+ * @LastEditTime: 2022-01-10 13:08:30
  * @@Email: 8211180515@csu.edu.cn
  */
 #ifndef LEPJSON_H__
 #define LEPJSON_H__
 
+/* JSON 只包含 6 种数据类型 */
 typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
 
 /* JSON 是一个树形结构，我们最终需要实现一个树的数据结构，
@@ -29,5 +30,6 @@ enum {
 int lept_parse(lept_value* v, const char* json);
 
 lept_type lept_get_type(const lept_value* v);
+void lept_set_type(lept_value* v, lept_type t);
 
 #endif

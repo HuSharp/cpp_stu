@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2022-01-09 21:39:51
  * @LastEditors: HuSharp
- * @LastEditTime: 2022-01-09 23:49:47
+ * @LastEditTime: 2022-01-10 16:45:55
  * @@Email: 8211180515@csu.edu.cn
  */
 #include "leptjson.h"
@@ -37,11 +37,38 @@ static int lept_parse_null(lept_context* c, lept_value* v) {
     return LEPT_PARSE_OK;
 }
 
+/* true  = "true" , t ➔ true*/
+static int lept_parse_true(lept_context* c, lept_value* v) {
+    EXPECT(c, 't');
+    if (c->json[0] != 'r' || c->json[1] != 'u' || c->json[2] != 'e') {
+        return LEPT_PARSE_INVALID_VALUE;
+    }
+    c->json += 3;
+    v->type = LEPT_TRUE;
+    return LEPT_PARSE_OK;
+}
+
+/* false  = "false" , f ➔ false */
+static int lept_parse_false(lept_context* c, lept_value* v) {
+    EXPECT(c, 'f');
+    if (c->json[0] != 'a' || c->json[1] != 'l' || c->json[2] != 's' || c->json[3] != 'e') {
+        return LEPT_PARSE_INVALID_VALUE;
+    }
+    c->json += 4;
+    v->type = LEPT_FALSE;
+    return LEPT_PARSE_OK;
+}
+
+
 static int lept_parse_value(lept_context* c, lept_value* v) {
     switch (*c->json)
     {
     case 'n':
         return lept_parse_null(c, v);
+    case 't':
+        return lept_parse_true(c, v);
+    case 'f':
+        return lept_parse_false(c, v);
     case '\0':
         return LEPT_PARSE_EXPECT_VALUE;
     default:
@@ -54,15 +81,28 @@ static int lept_parse_value(lept_context* c, lept_value* v) {
 /* 以下实现没处理最后的 ws 和 LEPT_PARSE_ROOT_NOT_SINGULAR */
 int lept_parse(lept_value* v, const char* json) {
     lept_context c;
+    int ret;
     assert(v !=  NULL);
     c.json = json;
     v->type = LEPT_NULL;
 
     lept_parse_whitespace(&c);
-    return lept_parse_value(&c, v);
+    if ((ret = lept_parse_value(&c, v)) == LEPT_PARSE_OK) {
+        lept_parse_whitespace(&c);
+        if (*c.json != '\0') {
+            ret = LEPT_PARSE_ROOT_NOT_SINGULAR;
+        }
+    }
+    return ret;
 }
 
+/* const int *ptr 表示指向常量的指针 */
 lept_type lept_get_type(const lept_value* v) {
     assert(v != NULL);
     return v->type;
+}
+
+void lept_set_type(lept_value* v, lept_type t) {
+    assert(v != NULL);
+    v->type = t;
 }
