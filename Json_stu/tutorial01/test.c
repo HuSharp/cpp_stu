@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2022-01-09 20:29:59
  * @LastEditors: HuSharp
- * @LastEditTime: 2022-01-09 23:53:53
+ * @LastEditTime: 2022-01-10 16:47:08
  * @@Email: 8211180515@csu.edu.cn
  */
 #include <stdio.h>
@@ -32,10 +32,24 @@ static int test_pass = 0;
 
 static void test_parse_null() {
     lept_value val;
-    val.type = LEPT_TRUE;
+    val.type = LEPT_FALSE;
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&val, "null"));
     EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&val));
+}
 
+static void test_parse_true() {
+    lept_value val;
+    val.type = LEPT_FALSE;
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&val, "true"));
+    EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(&val));
+}
+
+
+static void test_parse_false() {
+    lept_value val;
+    val.type = LEPT_FALSE;
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&val, "false"));
+    EXPECT_EQ_INT(LEPT_FALSE, lept_get_type(&val));
 }
 
 static void test_parse_expect_value() {
@@ -53,6 +67,7 @@ static void test_parse_expect_value() {
 static void test_parse_invalid_value() {
     lept_value v;
     v.type = LEPT_FALSE;
+    lept_set_type(&v, LEPT_FALSE);
     EXPECT_EQ_INT(LEPT_PARSE_INVALID_VALUE, lept_parse(&v, "nul"));
     EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
 
@@ -68,8 +83,11 @@ static void test_parse_root_not_singular() {
     EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
 }
 
+/*  static 函数的意思是指，该函数只作用于编译单元中，那么没有被调用时，编译器是能发现的。 */
 static void test_parse() {
     test_parse_null();
+    test_parse_false();
+    test_parse_true();
     test_parse_expect_value();
     test_parse_invalid_value();
     test_parse_root_not_singular();
