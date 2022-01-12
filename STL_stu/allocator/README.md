@@ -111,6 +111,14 @@ destroy A.this=0x55f08e96a088
 
 ### placement new
 
+> 简单来说，placement new 就是不分配内存，由使用者给予内存空间来构建对象。其形式是：
+>
+> ```cpp
+> new (T*) T(...);
+> ```
+>
+> 第一个括号中的是给定的指针，它指向足够放下 T 类型的内存空间。而 T(...) 则是一个构造函数调用。
+
 `placement new` 允许我们将 object 建立在 allocated memory 上.
 
 ```cpp
