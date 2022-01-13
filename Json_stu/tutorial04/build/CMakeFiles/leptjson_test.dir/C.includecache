@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/husharp/CS/cpp/cpp_stu/Json_stu/tutorial04/leptjson.h
+stddef.h
+-
+
+/home/husharp/CS/cpp/cpp_stu/Json_stu/tutorial04/test.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+leptjson.h
+/home/husharp/CS/cpp/cpp_stu/Json_stu/tutorial04/leptjson.h
+assert.h
+-
+
