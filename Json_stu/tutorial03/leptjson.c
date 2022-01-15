@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2022-01-09 21:39:51
  * @LastEditors: HuSharp
- * @LastEditTime: 2022-01-12 21:54:17
+ * @LastEditTime: 2022-01-15 23:23:30
  * @@Email: 8211180515@csu.edu.cn
  */
 #include "leptjson.h"
@@ -34,7 +34,7 @@ static void* lept_context_push(lept_context* c, size_t len) {
     if (c->top + len >= c->size) {
         if (c->size == 0) 
             c->size = LEPT_PARSE_STACK_INIT_SIZE;
-        while (c->top)
+        while (c->top + len >= c->size)
             c->size += c->size >> 1; /* c->size*1.5 */ 
         c->stack = (char*)realloc(c->stack, c->size);
     }

@@ -4,7 +4,7 @@
  * @Author: HuSharp
  * @Date: 2022-01-09 14:05:39
  * @LastEditors: HuSharp
- * @LastEditTime: 2022-01-14 21:01:48
+ * @LastEditTime: 2022-01-15 23:14:52
  * @@Email: 8211180515@csu.edu.cn
  */
 #ifndef LEPJSON_H__
@@ -20,16 +20,26 @@ JSON 是一个树形结构，我们最终需要实现一个树的数据结构，
 每个节点使用 lept_value 结构体表示，我们会称它为一个 JSON 值（JSON value）。
 仅当 type == LEPT_NUMBER 时，n 才表示 JSON 数字的数值
 一个值不可能同时为数字和字符串，因此我们可使用 C 语言的 union 来节省内存
+object 选择用动态数组的方案
 */
 typedef struct lept_value lept_value;   /* 由于 lept_value 内使用了自身类型的指针，我们必须前向声明（forward declare）此类型。 */
+typedef struct lept_member lept_member;
 struct lept_value {
     lept_type type;
     union {
+        struct { lept_member* m; size_t size; }obj; /* object */
         struct { lept_value* e; size_t size; }arr;  /* array */
         struct { char* s; size_t len;}str;          /* string */
         double n;                                   /* number */
     }u;
 };
+
+struct lept_member {
+    char* key;
+    size_t klen;    /* key's length */
+    lept_value val;
+};
+
 
 enum {
     LEPT_PARSE_OK = 0,
@@ -43,7 +53,10 @@ enum {
     LEPT_PARSE_INVALID_SURROGATE_OK,
     LEPT_PARSE_INVALID_UNICODE_SURROGATE,    /* 只有高代理项而欠缺低代理项，或是低代理项不在合法码点范围 */
     LEPT_PARSE_INVALID_UNICODE_HEX,          /* \u 后不是 4 位十六进位数字 */
-    LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET
+    LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET,
+    LEPT_PARSE_MISS_KEY,                     /* object 没有 key */
+    LEPT_PARSE_MISS_COLON,                   /* object 没有  */
+    LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET
 };
 
 
@@ -72,5 +85,10 @@ void lept_set_number(lept_value* v, double n);
 
 size_t lept_get_array_size(const lept_value* v);
 lept_value* lept_get_array_element(const lept_value* v, size_t index);
+
+lept_value* lept_get_object_value(const lept_value* v, size_t index);
+size_t lept_get_object_size(const lept_value* v);
+const char* lept_get_object_key(const lept_value* v, size_t index);
+size_t lept_get_object_key_length(const lept_value* v, size_t index);
 
 #endif
