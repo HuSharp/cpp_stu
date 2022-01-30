@@ -48,6 +48,10 @@ inline void deallocate(T* buffer) {
 
 ## 内存管理
 
+内存分配的层面
+
+![image-20220118102853032](../assets/blog_image/README/image-20220118102853032.png)
+
 ### `new` 的调用
 
 ```cpp
@@ -109,6 +113,18 @@ destroy A.this=0x55f08e96a088
 
 
 
+### 调用途径梳理
+
+![image-20220118103953453](../assets/blog_image/README/image-20220118103953453.png)
+
+内存管理正是想通过走 **路径1** 来进行自定义的管理。即对 placement new 进行重载接管。
+
+而对于容器来说，上图的构造函数是集成在 construct 中进行实现的，allocator 也正是 operator new 的集成。
+
+![image-20220118104516150](../assets/blog_image/README/image-20220118104516150.png)
+
+
+
 ### placement new
 
 > 简单来说，placement new 就是不分配内存，由使用者给予内存空间来构建对象。其形式是：
@@ -119,7 +135,7 @@ destroy A.this=0x55f08e96a088
 >
 > 第一个括号中的是给定的指针，它指向足够放下 T 类型的内存空间。而 T(...) 则是一个构造函数调用。
 
-`placement new` 允许我们将 object 建立在 allocated memory 上.
+`placement new` 允许我们将 object 建立在 allocated memory 上。例如下面实例代码就是建立在　 buf 上。
 
 ```cpp
 #include <new>
@@ -129,8 +145,7 @@ A* pc = new(buf)A(1);
 delete[] buf;
 
 ------------
-A* pc = new(buf)A(1);
-该行被编译器转换成下面的形式
+A* pc = new(buf)A(1);		// 该行被编译器转换成下面的形式
 ------------
 void* mem =  ::operator new(sizeof(pc), buf);	-> 此 buf 就是上面的指针 buf, 和 new 可以进行对比.
 pc = static_cast<A*>(mem);	
@@ -299,7 +314,7 @@ const int Airplane::BLOCK_SIZE = 512;
 
 ### static allocator
 
-我们发现, 要是每一个 class 都重写 `operator new` 和 `operator delete` ,实属不 oop. 因此引入 allocator .
+我们发现, 要是每一个 class 都重写 `operator new` 和 `operator delete` ，实属不 oop. 因此引入 allocator .
 
 ```cpp
 class Foo
